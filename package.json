@@ -1,0 +1,49 @@
+{
+  "name": "solana-token-airdrop-platform",
+  "version": "1.0.0",
+  "description": "Complete token airdrop platform on Solana",
+  "scripts": {
+    "build-program": "anchor build",
+    "test-program": "anchor test",
+    "deploy-devnet": "anchor deploy --provider.cluster devnet",
+    "deploy-mainnet": "anchor deploy --provider.cluster mainnet",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:build": "cd backend && npm run build",
+    "backend:start": "cd backend && npm start",
+    "frontend:dev": "cd app && npm run dev",
+    "frontend:build": "cd app && npm run build",
+    "frontend:start": "cd app && npm start",
+    "setup": "npm run setup:backend && npm run setup:frontend",
+    "setup:backend": "cd backend && npm install",
+    "setup:frontend": "cd app && npm install",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd app && npm test",
+    "test:coverage": "npm run test:backend -- --coverage && npm run test:frontend -- --coverage",
+    "test:all": "npm run test:program && npm run test",
+    "test:program": "anchor test",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd app && npm run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "build:all": "npm run frontend:build && npm run backend:build"
+  },
+  "keywords": [
+    "solana",
+    "airdrop",
+    "spl-token",
+    "anchor",
+    "nextjs",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "prettier": "^3.1.1"
+  },
+  "workspaces": [
+    "backend",
+    "app"
+  ]
+}

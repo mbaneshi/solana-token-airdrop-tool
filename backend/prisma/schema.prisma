@@ -1,0 +1,137 @@
+// Prisma schema for Solana Token Airdrop Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UsersClaim {
+  id                    String        @id @default(uuid()) @db.Uuid
+  walletAddress         String        @unique @map("wallet_address") @db.VarChar(44)
+  claimStatus           ClaimStatus   @map("claim_status") @db.VarChar(20)
+  tokensClaimed         Decimal       @default(0) @map("tokens_claimed") @db.Decimal(20, 8)
+  transactionSignature  String?       @map("transaction_signature") @db.VarChar(88)
+  claimedAt             DateTime?     @map("claimed_at") @db.Timestamptz
+  ipAddress             String?       @map("ip_address")
+  userAgent             String?       @map("user_agent") @db.Text
+  authenticationMethod  String?       @map("authentication_method") @db.VarChar(50)
+  retryCount            Int           @default(0) @map("retry_count")
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  transactions          Transaction[]
+
+  @@index([walletAddress])
+  @@index([claimStatus])
+  @@index([claimedAt])
+  @@map("users_claims")
+}
+
+model Airdrop {
+  id                  String         @id @default(uuid()) @db.Uuid
+  name                String         @db.VarChar(255)
+  tokenMint           String         @map("token_mint") @db.VarChar(44)
+  totalSupply         Decimal        @map("total_supply") @db.Decimal(20, 8)
+  tokensDistributed   Decimal        @default(0) @map("tokens_distributed") @db.Decimal(20, 8)
+  tokensPerClaim      Decimal        @map("tokens_per_claim") @db.Decimal(20, 8)
+  startDate           DateTime       @map("start_date") @db.Timestamptz
+  endDate             DateTime?      @map("end_date") @db.Timestamptz
+  status              AirdropStatus  @db.VarChar(20)
+  whitelistOnly       Boolean        @default(false) @map("whitelist_only")
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  whitelistEntries    Whitelist[]
+
+  @@index([tokenMint])
+  @@index([status])
+  @@index([startDate])
+  @@map("airdrops")
+}
+
+model Transaction {
+  id            String            @id @default(uuid()) @db.Uuid
+  claimId       String            @map("claim_id") @db.Uuid
+  signature     String            @unique @db.VarChar(88)
+  status        TransactionStatus @db.VarChar(20)
+  errorMessage  String?           @map("error_message") @db.Text
+  blockTime     DateTime?         @map("block_time") @db.Timestamptz
+  slot          BigInt?
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  confirmedAt   DateTime?         @map("confirmed_at") @db.Timestamptz
+
+  claim         UsersClaim        @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@index([signature])
+  @@index([status])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model Whitelist {
+  id            String   @id @default(uuid()) @db.Uuid
+  walletAddress String   @map("wallet_address") @db.VarChar(44)
+  airdropId     String   @map("airdrop_id") @db.Uuid
+  eligible      Boolean  @default(true)
+  reason        String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  airdrop       Airdrop  @relation(fields: [airdropId], references: [id], onDelete: Cascade)
+
+  @@unique([walletAddress, airdropId], name: "unique_wallet_airdrop")
+  @@index([walletAddress])
+  @@index([airdropId])
+  @@index([eligible])
+  @@map("whitelist")
+}
+
+model Blacklist {
+  id            String   @id @default(uuid()) @db.Uuid
+  walletAddress String   @unique @map("wallet_address") @db.VarChar(44)
+  reason        String   @db.Text
+  blockedAt     DateTime @default(now()) @map("blocked_at") @db.Timestamptz
+  blockedBy     String?  @map("blocked_by") @db.VarChar(255)
+
+  @@index([walletAddress])
+  @@map("blacklist")
+}
+
+model AdminAction {
+  id           String   @id @default(uuid()) @db.Uuid
+  adminWallet  String   @map("admin_wallet") @db.VarChar(44)
+  actionType   String   @map("action_type") @db.VarChar(50)
+  targetEntity String?  @map("target_entity") @db.VarChar(50)
+  details      Json?    @db.JsonB
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([adminWallet])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("admin_actions")
+}
+
+// Enums
+enum ClaimStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum AirdropStatus {
+  scheduled
+  active
+  paused
+  completed
+}
+
+enum TransactionStatus {
+  pending
+  confirmed
+  failed
+}
