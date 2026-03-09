@@ -206,7 +206,7 @@ All thresholds **EXCEEDED** ✅
 ### Run All Tests
 ```bash
 # From project root
-cd /Users/nerd/freelancer/08-solana-token-airdrop
+cd solana-token-airdrop-tool
 
 # Anchor tests
 anchor test
